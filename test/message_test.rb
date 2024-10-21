@@ -3,7 +3,7 @@
 require_relative "test_helper"
 require "active_agent/action_prompt/message"
 
-describe ActiveAgent::ActionPrompt::Message do
+describe ActiveAgent::Message do
   let(:valid_attributes) { {content: "Hello", role: "user"} }
 
   it "initializes with valid attributes" do

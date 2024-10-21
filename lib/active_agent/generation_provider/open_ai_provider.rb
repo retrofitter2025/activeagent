@@ -10,21 +10,19 @@ module ActiveAgent
         super
         @api_key = config["api_key"]
         @model_name = config["model"] || "gpt-3.5-turbo"
+        @client = OpenAI::Client.new(api_key: @api_key)
       end
 
       def generate(prompt)
-        super
-        client = OpenAI::Client.new(api_key: @api_key)
-
         parameters = prompt_parameters.merge(model: @model_name)
         if config["stream"]
           parameters[:stream] = stream_proc
         else
-          response = client.chat(parameters: parameters)
+          response = @client.chat(parameters: parameters)
         end
-        generation_provider_response(response)
+        handle_response(response)
       rescue => e
-        handle_error(e)
+        raise GenerationProviderError, e.message
       end
 
       private
@@ -37,8 +35,12 @@ module ActiveAgent
         end
       end
 
-      def extract_message_from_response(response)
-        response.dig("choices", 0, "message")
+      def handle_response(response)
+        message_json = response.dig("choices", 0, "message")
+        message_content = message_json["content"]
+        message_role = message_json["role"]
+        message = ActiveAgent::Message.new(content: message_content, role: message_role)
+        @response = Response.new(message:, raw_response: response)
       end
     end
   end

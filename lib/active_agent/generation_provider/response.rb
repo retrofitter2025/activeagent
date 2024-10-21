@@ -7,10 +7,7 @@ module ActiveAgent
 
       def initialize(message:, raw_response: nil)
         @raw_response = raw_response
-      end
-
-      def message
-        raise NotImplementedError, "Subclasses must implement the message method"
+        @message = message
       end
     end
   end

@@ -50,10 +50,17 @@ describe ActiveAgent::GenerationProvider::OpenAIProvider do
     end
   end
 
-  describe "#extract_message_from_response" do
+  describe "#message" do
+    it "extracts the message from the response" do
+      message = {"choices" => [{"message" => "Test message"}]}
+      assert_equal "Test message", provider.send(:message, message)
+    end
+  end
+
+  describe "#response" do
     it "extracts the message from the response" do
       response = {"choices" => [{"message" => "Test message"}]}
-      assert_equal "Test message", provider.send(:extract_message_from_response, response)
+      assert_equal "Test message", provider.send(:response, response)
     end
   end
 end

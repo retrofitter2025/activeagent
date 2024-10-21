@@ -8,6 +8,7 @@ module ActiveAgent
       def initialize(config)
         @config = config
         @prompt = nil
+        @response = nil
       end
 
       def generate(prompt)
@@ -41,18 +42,8 @@ module ActiveAgent
         messages
       end
 
-      def generation_provider_response(response)
-        message = extract_message_from_response(response)
-        ActiveAgent::GenerationProvider::Response.new(response: message)
-      end
-
-      def extract_message_from_response(response)
-        raise NotImplementedError, "Subclasses must implement the 'extract_message_from_response' method"
-      end
-
-      def handle_error(error)
-        Rails.logger.error "#{self.class.name} Error: #{error.message}"
-        raise error
+      def response(response)
+        ActiveAgent::GenerationProvider::Response.new(response:)
       end
     end
   end

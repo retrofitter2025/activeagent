@@ -1,8 +1,9 @@
 # lib/active_agent.rb
 require "yaml"
 require "active_agent/version"
-require "active_support"
+require "active_agent/deprecator"
 require "active_agent/action_prompt/prompt_helper"
+require "active_support"
 
 module ActiveAgent
   extend ActiveSupport::Autoload
@@ -28,16 +29,13 @@ module ActiveAgent
       env = ENV["RAILS_ENV"] || ENV["ENV"] || "development"
       @config = config_file[env] || config_file
     end
-
-    def eager_load!
-      super
-
-      require "mail"
-      Mail.eager_autoload!
-
-      Base.descendants.each do |mailer|
-        mailer.eager_load! unless mailer.abstract?
-      end
-    end
   end
+end
+
+autoload :Mime, "action_dispatch/http/mime_type"
+
+ActiveSupport.on_load(:action_view) do
+  ActionView::Base.default_formats ||= Mime::SET.symbols
+  ActionView::Template.mime_types_implementation = Mime
+  ActionView::LookupContext::DetailsKey.clear
 end

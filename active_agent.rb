@@ -28,16 +28,5 @@ module ActiveAgent
       env = ENV["RAILS_ENV"] || ENV["ENV"] || "development"
       @config = config_file[env] || config_file
     end
-
-    def eager_load!
-      super
-
-      require "mail"
-      Mail.eager_autoload!
-
-      Base.descendants.each do |mailer|
-        mailer.eager_load! unless mailer.abstract?
-      end
-    end
   end
 end

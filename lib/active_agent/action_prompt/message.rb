@@ -1,47 +1,40 @@
-# lib/active_agent/action_prompt/message.rb
-
-require "active_model"
-
 module ActiveAgent
-  module ActionPrompt
-    class Message
-      include ActiveModel::API
-      include ActiveModel::Attributes
+  class Message
+    VALID_ROLES = %w[system assistant user].freeze
 
-      attribute :content, :string, default: ""
-      attribute :requested_actions, default: -> { [] }
-      attribute :params, default: -> { {} }
-      attribute :role, :string, default: "system"
+    attr_accessor :content, :requested_actions, :params, :role
 
-      VALID_ROLES = %w[system assistant user].freeze
+    def initialize(attributes = {})
+      @content = attributes[:content] || ""
+      @requested_actions = attributes[:requested_actions] || []
+      @params = attributes[:params] || {}
+      @role = attributes[:role] || "system"
+      validate_role
+    end
 
-      def initialize(attributes = {})
-        super
-        validate_role
+    def actions_requested?
+      requested_actions.any?
+    end
+
+    def call_actions
+      requested_actions.each do |action|
+        action.call(self) if action.respond_to?(:call)
       end
+    end
 
-      def actions_requested?
-        requested_actions.any?
-      end
+    def to_s
+      content.to_s
+    end
 
-      def action_call?
-        false
-      end
+    def to_h
+      {content: content, role: role}
+    end
 
-      def to_s
-        content.to_s
-      end
+    private
 
-      def to_h
-        {content: content, role: role}
-      end
-
-      private
-
-      def validate_role
-        unless VALID_ROLES.include?(role)
-          raise ArgumentError, "Invalid role: #{role}. Valid roles are: #{VALID_ROLES.join(", ")}"
-        end
+    def validate_role
+      unless VALID_ROLES.include?(role)
+        raise ArgumentError, "Invalid role: #{role}. Valid roles are: #{VALID_ROLES.join(", ")}"
       end
     end
   end

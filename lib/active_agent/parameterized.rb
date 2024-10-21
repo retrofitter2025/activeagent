@@ -43,13 +43,24 @@ module ActiveAgent
         @params = params
       end
 
+      private
 
       def processed_agent
         @processed_agent ||= @agent_class.new.tap do |agent|
           agent.params = @params
           agent.process @action, *@args
         end
-      end 
+      end
+
+      def enqueue_generation(generation_method, options = {})
+        if processed?
+          super
+        else
+          @agent_class.generation_job.set(options).perform_later(
+            @agent_class.name, @action.to_s, params: @params, args: @args
+          )
+        end
+      end
     end
   end
 end

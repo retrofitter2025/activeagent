@@ -25,16 +25,16 @@ module ActiveAgent
         set_callback :generate, :around, *methods
       end
 
-      def before_action(*filters, &blk)
-        set_callback(:process_action, :before, *filters, &blk)
+      def before_action(*filters, &)
+        set_callback(:process_action, :before, *filters, &)
       end
 
-      def after_action(*filters, &blk)
-        set_callback(:process_action, :after, *filters, &blk)
+      def after_action(*filters, &)
+        set_callback(:process_action, :after, *filters, &)
       end
 
-      def around_action(*filters, &blk)
-        set_callback(:process_action, :around, *filters, &blk)
+      def around_action(*filters, &)
+        set_callback(:process_action, :around, *filters, &)
       end
     end
 
