@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gemspec
+# gemspec
 
 gem "rake"
 gem "ruby-openai", "~> 7.1.0"
@@ -10,6 +10,7 @@ gem "actionview", ">= 7.2.1"
 gem "activesupport", ">= 7.2.1"
 gem "activemodel", ">= 7.2.1"
 gem "activejob", ">= 7.2.1"
+gem "railties", ">= 7.2.1"
 group :test do
   gem "maxitest"
   gem "mocha"

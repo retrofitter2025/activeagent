@@ -33,8 +33,6 @@ module ActiveAgent
 
     helper ActiveAgent::ActionPrompt::PromptHelper
 
-    # Define class attributes and accessors
-    class_attribute :provider
     class_attribute :options
 
     attr_internal :_prompt
@@ -62,13 +60,13 @@ module ActiveAgent
 
       # Define how the agent should generate content
       def generate_with(provider, **options)
-        self.provider = provider
+        self.generation_provider = provider
         self.options = options
       end
 
       # Sets the defaults through app configuration:
       #
-      #     config.action_mailer.default(from: "no-reply@example.org")
+      #     config.active_agent.default(from: "no-reply@example.org")
       #
       # Aliased by ::default_options=
       def default(value = nil)
@@ -77,7 +75,7 @@ module ActiveAgent
       end
       # Allows to set defaults through app configuration:
       #
-      #    config.action_mailer.default_options = { from: "no-reply@example.org" }
+      #    config.active_agent.default_options = { from: "no-reply@example.org" }
       alias_method :default_options=, :default
 
       # Handle action methods dynamically
@@ -159,13 +157,8 @@ module ActiveAgent
     end
 
     # Generate a response from the provider
-    def perform_generation
-      provider_instance.generate(self)
-    end
-
-    # Initialize the provider instance
-    def provider_instance
-      @provider_instance ||= GenerationProvider.for(self.class.provider, **self.class.options)
+    def generate
+      generation_provider.generate(@_prompt)
     end
 
     # Handle exceptions
@@ -175,14 +168,44 @@ module ActiveAgent
       self.class.handle_exception(e)
     end
 
+    def headers(args = nil)
+      if args
+        @_prompt.headers(args)
+      else
+        @_prompt
+      end
+    end
+
     private
 
     def apply_defaults(headers)
-      headers.reverse_merge(self.class.default_params)
+      default_values = self.class.default.except(*headers.keys).transform_values do |value|
+        compute_default(value)
+      end
+
+      headers_with_defaults = headers.reverse_merge(default_values)
+      headers_with_defaults[:subject] ||= default_i18n_subject
+      headers_with_defaults
+    end
+
+    def default_i18n_subject(interpolations = {}) # :doc:
+      agent_scope = self.class.agent_name.tr("/", ".")
+      I18n.t(:subject, **interpolations.merge(scope: [agent_scope, agent_name], default: agent_name.humanize))
+    end
+
+    def compute_default(value)
+      return value unless value.is_a?(Proc)
+
+      if value.arity == 1
+        instance_exec(self, &value)
+      else
+        instance_exec(&value)
+      end
     end
 
     def assign_headers_to_prompt(prompt, headers)
-      assignable = headers.except(:parts_order, :content, :content_type, :body, :template_name, :template_path)
+      binding.irb
+      assignable = headers.except(:parts_order, :content, :content_type, :body, :subject, :template_name, :template_path)
       assignable.each { |k, v| prompt.send(:"#{k}=", v) }
     end
 
@@ -197,6 +220,7 @@ module ActiveAgent
     end
 
     def collect_responses_from_block(headers, &block)
+      binding.irb
       templates_name = headers[:template_name] || action_name
       collector = ::ActionPrompt::Collector.new(lookup_context) { render(templates_name) }
       yield(collector)
@@ -211,6 +235,7 @@ module ActiveAgent
     end
 
     def collect_responses_from_templates(headers)
+      binding.irb
       templates_path = headers[:template_path] || self.class.agent_name
       templates_name = headers[:template_name] || action_name
       each_template(Array(templates_path), templates_name).map do |template|
@@ -225,6 +250,7 @@ module ActiveAgent
     def each_template(paths, name, &)
       templates = lookup_context.find_all(name, paths)
       if templates.empty?
+        binding.irb
         raise ActionView::MissingTemplate.new(paths, name, paths, false, "agent")
       else
         templates.uniq(&:format).each(&)

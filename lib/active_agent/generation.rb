@@ -39,7 +39,7 @@ module ActiveAgent
     def generate_now!
       processed_agent.handle_exceptions do
         processed_agent.run_callbacks(:generate) do
-          processed_agent.provider.generate!
+          processed_agent.generate!
         end
       end
     end
@@ -47,8 +47,7 @@ module ActiveAgent
     def generate_now
       processed_agent.handle_exceptions do
         processed_agent.run_callbacks(:generate) do
-          binding.irb
-          processed_agent.provider.generate(prompt)
+          processed_agent.generate
         end
       end
     end

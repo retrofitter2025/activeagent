@@ -25,7 +25,7 @@ require "action_view"
 ActiveAgent::Base.include(ActionView::Layouts)
 
 # Show backtraces for deprecated behavior for quicker cleanup.
-ActiveAgent.deprecator.debug = true
+# ActiveAgent.deprecator.debug = true
 
 # Disable available locale checks to avoid warnings running the test suite.
 I18n.enforce_available_locales = false

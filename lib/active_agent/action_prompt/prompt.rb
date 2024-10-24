@@ -15,10 +15,9 @@ module ActiveAgent
         @mime_version = attributes.fetch(:mime_version, "1.0")
         @charset = attributes.fetch(:charset, "UTF-8")
         @context = attributes.fetch(:context, [])
-        @content = attributes.fetch(:content, "")
+        @headers = attributes.fetch(:headers, {})
 
         set_instructions if @instructions.present?
-        set_content if @content.present?
         set_message if attributes[:message].is_a?(String)
         set_messages if @messages.any?
       end
@@ -33,13 +32,14 @@ module ActiveAgent
           actions: @actions,
           instructions: @instructions,
           message: @message.to_h,
-          messages: @messages.map(&:to_h)
+          messages: @messages.map(&:to_h),
+          headers: @headers,
+          context: @context
         }
       end
 
-      # Set the content of the prompt (for debugging or sending to the provider)
-      def set_content
-        @message = Message.new(content: @content, role: :user)
+      def headers(headers = {})
+        @headers.merge!(headers)
       end
 
       def set_instructions
