@@ -35,7 +35,7 @@ module ActiveAgent
 
     class_attribute :options
 
-    attr_internal :_prompt
+    attr_internal :prompt
 
     class_attribute :default_params, default: {
       mime_version: "1.0",
@@ -45,10 +45,6 @@ module ActiveAgent
     }.freeze
 
     class << self
-      def prompt(headers = {}, &)
-        new.prompt(headers, &)
-      end
-
       # Returns the name of the current agent. This method is also being used as a path for a view lookup.
       # If this is an anonymous agent, this method will return +anonymous+ instead.
       def agent_name
@@ -79,15 +75,15 @@ module ActiveAgent
       alias_method :default_options=, :default
 
       # Handle action methods dynamically
-      def method_missing(method_name, *, &block)
+      def method_missing(method_name, ...)
         if action_methods.include?(method_name.to_s)
-          ActiveAgent::Generation.new(self, method_name, *)
+          Generation.new(self, method_name, ...)
         else
           super
         end
       end
 
-      def respond_to_missing?(method_name, include_private = false)
+      def respond_to_missing?(method_name, include_all = false)
         action_methods.include?(method_name.to_s) || super
       end
 
@@ -110,6 +106,7 @@ module ActiveAgent
     end
 
     def process(method_name, *args) # :nodoc:
+      _action_name = method_name.to_s
       payload = {
         agent: self.class.name,
         action: method_name,
@@ -124,21 +121,21 @@ module ActiveAgent
     ruby2_keywords(:process)
 
     def prompt(headers = {}, &block)
-      return @_prompt if @_prompt_was_called && headers.blank? && !block
+      return prompt if @_prompt_was_called && headers.blank? && !block
 
       headers = apply_defaults(headers)
 
-      @_prompt = ActiveAgent::ActionPrompt::Prompt.new
+      prompt = ActiveAgent::ActionPrompt::Prompt.new
 
       assign_headers_to_prompt(@_prompt, headers)
 
       responses = collect_responses(headers, &block)
 
-      @_prompt_was_called = true
+      prompt_was_called = true
 
       create_parts_from_responses(@_prompt, responses)
 
-      @_prompt
+      prompt
     end
 
     # Returns the name of the agent object.
@@ -147,14 +144,9 @@ module ActiveAgent
     end
 
     # Accessors for params and context
-    attr_accessor :message
+    attr_accessor :prompt
     attr_reader :content
     attr_reader :context
-
-    # Render the default instructions
-    def instructions
-      render template: "#{self.class.name.underscore}/instructions", formats: [:text]
-    end
 
     # Generate a response from the provider
     def generate
@@ -204,7 +196,6 @@ module ActiveAgent
     end
 
     def assign_headers_to_prompt(prompt, headers)
-      binding.irb
       assignable = headers.except(:parts_order, :content, :content_type, :body, :subject, :template_name, :template_path)
       assignable.each { |k, v| prompt.send(:"#{k}=", v) }
     end
@@ -220,7 +211,6 @@ module ActiveAgent
     end
 
     def collect_responses_from_block(headers, &block)
-      binding.irb
       templates_name = headers[:template_name] || action_name
       collector = ::ActionPrompt::Collector.new(lookup_context) { render(templates_name) }
       yield(collector)
@@ -235,7 +225,6 @@ module ActiveAgent
     end
 
     def collect_responses_from_templates(headers)
-      binding.irb
       templates_path = headers[:template_path] || self.class.agent_name
       templates_name = headers[:template_name] || action_name
       each_template(Array(templates_path), templates_name).map do |template|

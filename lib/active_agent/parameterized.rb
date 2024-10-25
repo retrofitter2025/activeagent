@@ -19,14 +19,14 @@ module ActiveAgent
     end
 
     class Agent
-      def initialize(agent_class, params)
-        @agent_class = agent_class
+      def initialize(agent, params)
+        @agent = agent
         @params = params
       end
 
       def method_missing(method_name, ...)
-        if @agent_class.public_instance_methods.include?(method_name)
-          ActiveAgent::Parameterized::Generation.new(@agent_class, method_name, @params, ...)
+        if @agent.public_instance_methods.include?(method_name)
+          ActiveAgent::Parameterized::Generation.new(@agent, method_name, @params, ...)
         else
           super
         end
