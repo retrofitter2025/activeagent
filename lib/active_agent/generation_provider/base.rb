@@ -12,7 +12,6 @@ module ActiveAgent
       end
 
       def generate(prompt)
-        @prompt = prompt
         raise NotImplementedError, "Subclasses must implement the 'generate' method"
       end
 
@@ -20,30 +19,9 @@ module ActiveAgent
 
       def prompt_parameters
         {
-          messages: prompt_messages,
+          messages: @prompt.messages,
           temperature: @config["temperature"] || 0.7
         }
-      end
-
-      def prompt_messages
-        messages = []
-        if @prompt.instructions.present?
-          system_message = @prompt.instructions.to_h
-          messages << system_message
-        end
-
-        messages.concat(@prompt.messages.map(&:to_h)) if @prompt.messages.present?
-
-        if @prompt.message.present?
-          prompt_message = @prompt.message.to_h
-          messages << prompt_message
-        end
-
-        messages
-      end
-
-      def response(response)
-        ActiveAgent::GenerationProvider::Response.new(response:)
       end
     end
   end

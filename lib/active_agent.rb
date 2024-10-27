@@ -3,6 +3,7 @@ require "yaml"
 require "abstract_controller"
 require "active_agent/version"
 require "active_agent/deprecator"
+require "active_agent/railtie" if defined?(Rails)
 
 require "active_support"
 require "active_support/rails"

@@ -48,6 +48,10 @@ module ActiveAgent
     }.freeze
 
     class << self
+      def prompt(...)
+        new.prompt(...)
+      end
+
       # Register one or more Observers which will be notified when mail is delivered.
       def register_observers(*observers)
         observers.flatten.compact.each { |observer| register_observer(observer) }
@@ -177,6 +181,10 @@ module ActiveAgent
 
     attr_internal :context
 
+    def perform_generation
+      generation_provider.generate(context) if context && generation_provider
+    end
+
     def initialize
       super
       @_prompt_was_called = false
@@ -280,8 +288,8 @@ module ActiveAgent
       context.charset = charset
 
       if context.multipart?
-        context.body.set_sort_order(headers[:parts_order])
-        context.body.sort_parts!
+        # context.body.set_sort_order(headers[:parts_order])
+        # context.body.sort_parts!
       end
 
       context
@@ -293,7 +301,7 @@ module ActiveAgent
       if user_content_type.present?
         user_content_type
       else
-        m.content_type || class_default
+        context.content_type || class_default
       end
     end
 
@@ -357,7 +365,7 @@ module ActiveAgent
     def collect_responses_from_templates(headers)
       templates_path = headers[:template_path] || self.class.agent_name
       templates_name = headers[:template_name] || action_name
-      binding.irb
+
       each_template(Array(templates_path), templates_name).map do |template|
         format = template.format || formats.first
         {
@@ -376,23 +384,22 @@ module ActiveAgent
       end
     end
 
-    def create_parts_from_responses(m, responses)
-      if responses.size == 1 && !m.has_attachments?
-        responses[0].each { |k, v| m[k] = v }
-      elsif responses.size > 1 && m.has_attachments?
-        container = Mail::Part.new
-        container.content_type = "multipart/alternative"
-        responses.each { |r| insert_part(container, r, m.charset) }
-        m.add_part(container)
+    def create_parts_from_responses(context, responses)
+      if responses.size == 1
+        responses[0].each { |k, v| context[k] = v }
+      elsif responses.size > 1 && false
+        prompt_container = ActiveAgent::ActionPrompt::Prompt.new
+        prompt_container.content_type = "multipart/alternative"
+        responses.each { |r| insert_part(context, r, context.charset) }
+        context.add_part(prompt_container)
       else
-        responses.each { |r| insert_part(m, r, m.charset) }
+        responses.each { |r| insert_part(context, r, context.charset) }
       end
     end
 
     def insert_part(container, response, charset)
       response[:charset] ||= charset
-      part = Mail::Part.new(response)
-      container.add_part(part)
+      container.add_part(response)
     end
 
     # This and #instrument_name is for caching instrument

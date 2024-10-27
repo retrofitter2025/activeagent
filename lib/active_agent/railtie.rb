@@ -2,6 +2,7 @@
 
 require "active_job/railtie"
 require "active_agent"
+require "active_agent/engine"
 require "rails"
 require "abstract_controller/railties/routes_helpers"
 
@@ -9,7 +10,7 @@ module ActiveAgent
   class Railtie < Rails::Railtie # :nodoc:
     config.active_agent = ActiveSupport::OrderedOptions.new
     config.active_agent.preview_paths = []
-    config.eager_load_namespaces << ActiveAgent
+    config.eager_load_namespaces << ::ActiveAgent
 
     initializer "active_agent.deprecator", before: :load_environment_config do |app|
       app.deprecators[:active_agent] = ActiveAgent.deprecator
@@ -42,6 +43,7 @@ module ActiveAgent
         register_interceptors(options.delete(:interceptors))
         register_preview_interceptors(options.delete(:preview_interceptors))
         register_observers(options.delete(:observers))
+        self.view_paths = ["#{Rails.root}/app/views"]
         self.preview_paths |= options[:preview_paths]
 
         if delivery_job = options.delete(:delivery_job)
@@ -50,13 +52,6 @@ module ActiveAgent
 
         if options.smtp_settings
           self.smtp_settings = options.smtp_settings
-        end
-
-        smtp_timeout = options.delete(:smtp_timeout)
-
-        if smtp_settings && smtp_timeout
-          smtp_settings[:open_timeout] ||= smtp_timeout
-          smtp_settings[:read_timeout] ||= smtp_timeout
         end
 
         options.each { |k, v| send(:"#{k}=", v) }
@@ -70,7 +65,7 @@ module ActiveAgent
 
     initializer "active_agent.set_autoload_paths", before: :set_autoload_paths do |app|
       options = app.config.active_agent
-      app.config.paths["test/agents/previews"].concat(options.preview_paths)
+      # app.config.paths["test/agents/previews"].concat(options.preview_paths)
     end
 
     initializer "active_agent.compile_config_methods" do

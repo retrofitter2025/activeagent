@@ -2,6 +2,7 @@
 
 require_relative "base"
 require "openai"
+require "active_agent/generation_provider/response"
 
 module ActiveAgent
   module GenerationProvider
@@ -14,7 +15,9 @@ module ActiveAgent
       end
 
       def generate(prompt)
+        @prompt = prompt
         parameters = prompt_parameters.merge(model: @model_name)
+        # parameters[:instructions] = prompt.instructions.content if prompt.instructions.present?
         if config["stream"]
           parameters[:stream] = stream_proc
         else
@@ -30,7 +33,7 @@ module ActiveAgent
       def stream_proc
         proc do |chunk, _bytesize|
           new_content = chunk.dig("choices", 0, "delta", "content")
-          message = messages.find { |m| m.response_number == chunk.dig("choices", 0, "index") }
+          message = @prompt.messages.find { |message| message.response_number == chunk.dig("choices", 0, "index") }
           message.update(content: message.content + new_content) if new_content
         end
       end
@@ -40,7 +43,7 @@ module ActiveAgent
         message_content = message_json["content"]
         message_role = message_json["role"]
         message = ActiveAgent::Message.new(content: message_content, role: message_role)
-        @response = Response.new(message:, raw_response: response)
+        ActiveAgent::GenerationProvider::Response.new(message:, raw_response: response)
       end
     end
   end
