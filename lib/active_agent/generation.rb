@@ -4,28 +4,26 @@ require "delegate"
 module ActiveAgent
   class Generation < Delegator
     def initialize(agent_class, action, *args)
-      @agent_class = agent_class
-      @action = action
-      @args = args
+      @agent_class, @action, @args = agent_class, action, args
       @processed_agent = nil
-      @prompt = nil
+      @prompt_context = nil
     end
     ruby2_keywords(:initialize)
 
     def __getobj__
-      @prompt ||= processed_agent.prompt
+      @prompt_context ||= processed_agent.context
     end
 
-    def __setobj__(prompt)
-      @prompt = prompt
+    def __setobj__(prompt_context)
+      @prompt_context = prompt_context
     end
 
-    def prompt
+    def context
       __getobj__
     end
 
     def processed?
-      @processed_agent || @prompt
+      @processed_agent || @prompt_context
     end
 
     def generate_later!(options = {})
@@ -62,13 +60,13 @@ module ActiveAgent
 
     def enqueue_generation(generation_method, options = {})
       if processed?
-        ::Kernel.raise "You've accessed the prompt before asking to " \
+        ::Kernel.raise "You've accessed the context before asking to " \
           "generate it later, so you may have made local changes that would " \
           "be silently lost if we enqueued a job to generate it. Why? Only " \
           "the agent method *arguments* are passed with the generation job! " \
-          "Do not access the prompt in any way if you mean to generate it " \
-          "later. Workarounds: 1. don't touch the prompt before calling " \
-          "#generate_later, 2. only touch the message *within your mailer " \
+          "Do not access the context in any way if you mean to generate it " \
+          "later. Workarounds: 1. don't touch the context before calling " \
+          "#generate_later, 2. only touch the context *within your agent " \
           "method*, or 3. use a custom Active Job instead of #generate_later."
       else
         @agent_class.generation_job.set(options).perform_later(

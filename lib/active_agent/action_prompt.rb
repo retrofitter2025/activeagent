@@ -9,6 +9,7 @@ module ActiveAgent
       autoload :Collector
       autoload :Message
       autoload :Prompt
+      autoload :PromptHelper
     end
 
     autoload :Base
@@ -24,33 +25,33 @@ module ActiveAgent
 
       helper ActiveAgent::ActionPrompt::PromptHelper
 
-      class_attribute :default_params, default: {
-        content_type: "text/plain",
-        parts_order: ["text/plain", "text/html", "application/json"]
-      }.freeze
+      # class_attribute :default_params, default: {
+      #   content_type: "text/plain",
+      #   parts_order: ["text/plain", "text/html", "application/json"]
+      # }.freeze
     end
 
-    def self.prompt(headers = {}, &)
-      new.prompt(headers, &)
-    end
+    # # def self.prompt(headers = {}, &)
+    # #   new.prompt(headers, &)
+    # # end
 
-    def prompt(headers = {}, &block)
-      return @_message if @_prompt_was_called && headers.blank? && !block
+    # def prompt(headers = {}, &block)
+    #   return @_message if @_prompt_was_called && headers.blank? && !block
 
-      headers = apply_defaults(headers)
+    #   headers = apply_defaults(headers)
 
-      @_message = ActiveAgent::ActionPrompt::Prompt.new
+    #   @_message = ActiveAgent::ActionPrompt::Prompt.new
 
-      assign_headers_to_message(@_message, headers)
+    #   assign_headers_to_message(@_message, headers)
 
-      responses = collect_responses(headers, &block)
+    #   responses = collect_responses(headers, &block)
 
-      @_prompt_was_called = true
+    #   @_prompt_was_called = true
 
-      create_parts_from_responses(@_message, responses)
+    #   create_parts_from_responses(@_message, responses)
 
-      @_message
-    end
+    #   @_message
+    # end
 
     private
 
@@ -111,6 +112,12 @@ module ActiveAgent
     def create_parts_from_responses(message, responses)
       responses.each do |response|
         message.add_part(response[:body], content_type: response[:content_type])
+      end
+    end
+
+    class TestAgent
+      class << self
+        attr_accessor :generations
       end
     end
   end

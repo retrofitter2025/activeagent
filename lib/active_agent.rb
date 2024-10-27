@@ -1,24 +1,46 @@
 # lib/active_agent.rb
 require "yaml"
+require "abstract_controller"
 require "active_agent/version"
 require "active_agent/deprecator"
-require "active_agent/action_prompt/prompt_helper"
+
 require "active_support"
+require "active_support/rails"
+require "active_support/core_ext/class"
+require "active_support/core_ext/module/attr_internal"
+require "active_support/core_ext/string/inflections"
+require "active_support/lazy_load_hooks"
 
 module ActiveAgent
   extend ActiveSupport::Autoload
 
+  eager_autoload do
+    autoload :Collector
+  end
+
   autoload :Base
   autoload :Callbacks
-  autoload :ActionPrompt
-  autoload :Parameterized
+  autoload :InlinePreviewInterceptor
+  autoload :PromptHelper
   autoload :Generation
+  autoload :GenerationMethods
   autoload :GenerationProvider
-  autoload :GenerationJob
   autoload :QueuedGeneration
+  autoload :Parameterized
+  autoload :Preview
+  autoload :Previews, "active_agent/preview"
+  autoload :GenerationJob
 
   class << self
     attr_accessor :config
+
+    def eager_load!
+      super
+
+      Base.descendants.each do |agent|
+        agent.eager_load! unless agent.abstract?
+      end
+    end
 
     def configure
       yield self

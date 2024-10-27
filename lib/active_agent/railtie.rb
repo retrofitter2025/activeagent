@@ -12,7 +12,7 @@ module ActiveAgent
     config.eager_load_namespaces << ActiveAgent
 
     initializer "active_agent.deprecator", before: :load_environment_config do |app|
-      app.deprecators[:active_agent] = active_agent.deprecator
+      app.deprecators[:active_agent] = ActiveAgent.deprecator
     end
 
     initializer "active_agent.logger" do
@@ -44,8 +44,19 @@ module ActiveAgent
         register_observers(options.delete(:observers))
         self.preview_paths |= options[:preview_paths]
 
-        if generation_job = options.delete(:generation_job)
-          self.generation_job = generation_job.constantize
+        if delivery_job = options.delete(:delivery_job)
+          self.delivery_job = delivery_job.constantize
+        end
+
+        if options.smtp_settings
+          self.smtp_settings = options.smtp_settings
+        end
+
+        smtp_timeout = options.delete(:smtp_timeout)
+
+        if smtp_settings && smtp_timeout
+          smtp_settings[:open_timeout] ||= smtp_timeout
+          smtp_settings[:read_timeout] ||= smtp_timeout
         end
 
         options.each { |k, v| send(:"#{k}=", v) }

@@ -1,46 +1,30 @@
 # frozen_string_literal: true
 
-require "active_support/concern"
-
 module ActiveAgent
   module Callbacks
     extend ActiveSupport::Concern
 
     included do
       include ActiveSupport::Callbacks
-      define_callbacks :generate
-      define_callbacks :process_action
+      define_callbacks :generate, skip_after_callbacks_if_terminated: true
     end
 
     module ClassMethods
-      def before_generate(*methods)
-        set_callback :generate, :before, *methods
+      # Defines a callback that will get called right before the
+      # prompt is sent to the generation provider method.
+      def before_generate(*filters, &)
+        set_callback(:generate, :before, *filters, &)
       end
 
-      def after_generate(*methods)
-        set_callback :generate, :after, *methods
+      # Defines a callback that will get called right after the
+      # prompt's generation method is finished.
+      def after_generate(*filters, &)
+        set_callback(:generate, :after, *filters, &)
       end
 
-      def around_generate(*methods)
-        set_callback :generate, :around, *methods
-      end
-
-      def before_action(*filters, &)
-        set_callback(:process_action, :before, *filters, &)
-      end
-
-      def after_action(*filters, &)
-        set_callback(:process_action, :after, *filters, &)
-      end
-
-      def around_action(*filters, &)
-        set_callback(:process_action, :around, *filters, &)
-      end
-    end
-
-    def process(action, *args)
-      run_callbacks :process_action do
-        public_send(action, *args)
+      # Defines a callback that will get called around the prompt's generation method.
+      def around_generate(*filters, &)
+        set_callback(:generate, :around, *filters, &)
       end
     end
   end
