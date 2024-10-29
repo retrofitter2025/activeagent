@@ -3,7 +3,7 @@
 module ActiveAgent
   module GenerationProvider
     class Base
-      attr_reader :config, :prompt
+      attr_reader :client, :config, :prompt
 
       def initialize(config)
         @config = config
@@ -13,6 +13,13 @@ module ActiveAgent
 
       def generate(prompt)
         raise NotImplementedError, "Subclasses must implement the 'generate' method"
+      end
+
+      private
+
+      def handle_response(response)
+        ActiveAgent::GenerationProvider::Response.new(message:, raw_response: response)
+        raise NotImplementedError, "Subclasses must implement the 'handle_response' method"
       end
 
       protected

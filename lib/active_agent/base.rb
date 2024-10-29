@@ -109,10 +109,15 @@ module ActiveAgent
         end
       end
       private :observer_class_for
+
       # Define how the agent should generate content
       def generate_with(provider, **options)
         self.generation_provider = provider
-        self.options = options
+        self.options = (options || {}).merge(options)
+      end
+
+      def stream_with(&stream)
+        self.options = (options || {}).merge(stream: stream)
       end
 
       # Returns the name of the current agent. This method is also being used as a path for a view lookup.
@@ -182,13 +187,13 @@ module ActiveAgent
     attr_internal :context
 
     def perform_generation
-      generation_provider.generate(context) if context && generation_provider
+      generation_provider.generate(context.options.merge(options)) if context && generation_provider
     end
 
     def initialize
       super
       @_prompt_was_called = false
-      @_context = ActiveAgent::ActionPrompt::Prompt.new
+      @_context = ActiveAgent::ActionPrompt::Prompt.new(instructions: options[:instructions])
     end
 
     def process(method_name, *args) # :nodoc:
@@ -385,9 +390,7 @@ module ActiveAgent
     end
 
     def create_parts_from_responses(context, responses)
-      if responses.size == 1
-        responses[0].each { |k, v| context[k] = v }
-      elsif responses.size > 1 && false
+      if responses.size > 1 && false
         prompt_container = ActiveAgent::ActionPrompt::Prompt.new
         prompt_container.content_type = "multipart/alternative"
         responses.each { |r| insert_part(context, r, context.charset) }

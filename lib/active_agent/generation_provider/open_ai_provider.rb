@@ -17,12 +17,12 @@ module ActiveAgent
       def generate(prompt)
         @prompt = prompt
         parameters = prompt_parameters.merge(model: @model_name)
+
         # parameters[:instructions] = prompt.instructions.content if prompt.instructions.present?
-        if config["stream"]
-          parameters[:stream] = stream_proc
-        else
-          response = @client.chat(parameters: parameters)
-        end
+
+        parameters[:stream] = provider_stream if prompt.config[:stream] || config["stream"]
+
+        response = @client.chat(parameters: parameters)
         handle_response(response)
       rescue => e
         raise GenerationProviderError, e.message
@@ -30,11 +30,18 @@ module ActiveAgent
 
       private
 
-      def stream_proc
-        proc do |chunk, _bytesize|
+      def provider_stream
+        # prompt.config[:stream] will define a proc found in prompt at runtime
+        # config[:stream] will define a proc found in config stream would come from an Agent class's generate_with or stream_with method calls
+        agent_stream = prompt.config[:stream] || config["stream"]
+        proc do |chunk, bytesize|
+          # Provider parsing logic here
           new_content = chunk.dig("choices", 0, "delta", "content")
           message = @prompt.messages.find { |message| message.response_number == chunk.dig("choices", 0, "index") }
           message.update(content: message.content + new_content) if new_content
+
+          # Call the custom stream_proc if provided
+          agent_stream.call(message) if agent_stream.respond_to?(:call)
         end
       end
 

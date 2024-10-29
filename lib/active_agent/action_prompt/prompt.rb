@@ -4,12 +4,13 @@ require_relative "message"
 module ActiveAgent
   module ActionPrompt
     class Prompt
-      attr_accessor :actions, :content, :content_type, :instructions, :message, :messages, :params, :mime_version, :charset, :context
+      attr_accessor :actions, :body, :content_type, :instructions, :message, :messages, :params, :mime_version, :charset, :context
 
       def initialize(attributes = {})
+        @options = attributes.fetch(:options, {})
         @actions = attributes.fetch(:actions, [])
         @instructions = attributes.fetch(:instructions, "")
-        @content = attributes.fetch(:content, "")
+        @body = attributes.fetch(:body, "")
         @content_type = attributes.fetch(:content_type, "text/plain")
         @message = attributes.fetch(:message, Message.new)
         @messages = attributes.fetch(:messages, [])
@@ -20,7 +21,7 @@ module ActiveAgent
         @headers = attributes.fetch(:headers, {})
         @parts = attributes.fetch(:parts, [])
 
-        set_message if attributes[:message].is_a?(String) || @content.is_a?(String) && @message.content.blank?
+        set_message if attributes[:message].is_a?(String) || @body.is_a?(String) && @message.content.blank?
         set_messages if @messages.any? || @instructions.present?
       end
 
@@ -30,10 +31,10 @@ module ActiveAgent
       end
 
       def add_part(part)
-        message = Message.new(content: part[:body], role: :assistant)
+        message = Message.new(content: part[:body], role: :user)
         prompt_part = self.class.new(message: message, content: message.content, content_type: part[:content_type], chartset: part[:charset])
 
-        @message = message if @content_type == part[:content_type] && @message.content.blank?
+        set_message if @content_type == part[:content_type] && @message.content.blank?
 
         @parts << prompt_part
       end
@@ -62,12 +63,12 @@ module ActiveAgent
       end
 
       def set_message
-        if @content.is_a?(String) && @message.content.blank?
-          @message = Message.new(content: @content, role: :user)
-        elsif !@message.content.blank?
+        if @body.is_a?(String) && @message.content.blank?
+          @message = Message.new(content: @body, role: :user)
+        elsif @message.is_a? String
           @message = Message.new(content: @message, role: :user)
         end
-        @messages = [@message] + @messages
+        @messages = [@message] + set_messages
       end
     end
   end
