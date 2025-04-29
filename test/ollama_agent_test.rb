@@ -1,13 +1,13 @@
 require "test_helper"
 
-class OpenRouterAgentTest < ActiveSupport::TestCase
+class OllamaAgentTest < ActiveSupport::TestCase
   test "it renders a text_prompt and generates a response" do
-    VCR.use_cassette("open_router_text_prompt_response") do
+    VCR.use_cassette("ollama_text_prompt_response") do
       message = "Show me a cat"
-      prompt = OpenRouterAgent.with(message: message).text_prompt
+      prompt = OllamaAgent.with(message: message).text_prompt
       response = prompt.generate_now
 
-      assert_equal message, OpenRouterAgent.with(message: message).text_prompt.message.content
+      assert_equal message, OllamaAgent.with(message: message).text_prompt.message.content
       assert_equal 3, response.prompt.messages.size
       assert_equal :system, response.prompt.messages[0].role
       assert_equal :user, response.prompt.messages[1].role
@@ -17,13 +17,13 @@ class OpenRouterAgentTest < ActiveSupport::TestCase
   end
 
   test "it uses the correct model" do
-    prompt = OpenRouterAgent.new.text_prompt
-    assert_equal "qwen/qwen3-30b-a3b:free", prompt.options[:model]
+    prompt = OllamaAgent.new.text_prompt
+    assert_equal "gemma3:latest", prompt.options[:model]
   end
 
   test "it sets the correct system instructions" do
-    prompt = OpenRouterAgent.new.text_prompt
+    prompt = OllamaAgent.new.text_prompt
     system_message = prompt.messages.find { |m| m.role == :system }
-    assert_equal "You're a basic Open Router agent.", system_message.content
+    assert_equal "You're a basic Ollama agent.", system_message.content
   end
 end
