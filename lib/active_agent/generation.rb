@@ -8,7 +8,7 @@ module ActiveAgent
       @processed_agent = nil
       @prompt_context = nil
     end
-    ruby2_keywords(:initialize)
+    # ruby2_keywords(:initialize)
 
     def __getobj__
       @prompt_context ||= processed_agent.prompt_context

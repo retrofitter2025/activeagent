@@ -24,9 +24,9 @@ module ActiveAgent
         @params = params
       end
 
-      def method_missing(method_name, ...)
+      def method_missing(method_name, *args)
         if @agent.public_instance_methods.include?(method_name)
-          ActiveAgent::Parameterized::Generation.new(@agent, method_name, @params, ...)
+          ActiveAgent::Parameterized::Generation.new(@agent, method_name, @params, *args)
         else
           super
         end
@@ -38,8 +38,8 @@ module ActiveAgent
     end
 
     class Generation < ActiveAgent::Generation
-      def initialize(agent_class, action, params, ...)
-        super(agent_class, action, ...)
+      def initialize(agent_class, action, params, *args)
+        super(agent_class, action, *args)
         @params = params
       end
 

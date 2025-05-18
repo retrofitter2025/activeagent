@@ -1,6 +1,6 @@
 # filepath: lib/active_agent/action_prompt/prompt_test.rb
 
-require "test_helper"
+require "./test_helper"
 
 module ActiveAgent
   module ActionPrompt

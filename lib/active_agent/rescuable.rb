@@ -25,9 +25,9 @@ module ActiveAgent # :nodoc:
 
     private
 
-    def process(...)
+    def process(*args)
       handle_exceptions do
-        super
+        super(*args)
       end
     end
   end

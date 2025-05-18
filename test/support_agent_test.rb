@@ -1,5 +1,5 @@
 # test/support_agent_test.rb
-require "test_helper"
+require "./test_helper"
 
 class SupportAgentTest < ActiveSupport::TestCase
   test "it renders a prompt with an empty message using the Application Agent's text_prompt" do

@@ -18,7 +18,7 @@ module ActiveAgent
       end
     end
 
-    def generate(...)
+    def generate(*args)
       raise NotImplementedError
     end
   end

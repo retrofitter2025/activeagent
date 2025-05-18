@@ -1,6 +1,6 @@
 # test/application_agent_test.rb - additional test for embed functionality
 
-require "test_helper"
+require "./test_helper"
 
 class ApplicationAgentTest < ActiveSupport::TestCase
   test "it renders a prompt with an empty message" do

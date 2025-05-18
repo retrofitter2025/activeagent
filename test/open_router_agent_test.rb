@@ -1,4 +1,4 @@
-require "test_helper"
+require "./test_helper"
 
 class OpenRouterAgentTest < ActiveSupport::TestCase
   test "it renders a text_prompt and generates a response" do

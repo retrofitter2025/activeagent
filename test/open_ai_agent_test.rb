@@ -1,4 +1,4 @@
-require "test_helper"
+require "./test_helper"
 
 class OpenAIAgentTest < ActiveSupport::TestCase
   test "it renders a text_prompt generates a response" do

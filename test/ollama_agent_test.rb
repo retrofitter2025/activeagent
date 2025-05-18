@@ -1,4 +1,6 @@
-require "test_helper"
+# require "./rails_helper"
+# require "./test_helper"
+require "./spec_helper"
 
 class OllamaAgentTest < ActiveSupport::TestCase
   test "it renders a text_prompt and generates a response" do
@@ -18,7 +20,7 @@ class OllamaAgentTest < ActiveSupport::TestCase
 
   test "it uses the correct model" do
     prompt = OllamaAgent.new.text_prompt
-    assert_equal "gemma3:latest", prompt.options[:model]
+    assert_equal "llama3.1:8b", prompt.options[:model]
   end
 
   test "it sets the correct system instructions" do

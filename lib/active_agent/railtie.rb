@@ -12,9 +12,9 @@ module ActiveAgent
     config.active_agent.preview_paths = []
     config.eager_load_namespaces << ActiveAgent
 
-    initializer "active_agent.deprecator", before: :load_environment_config do |app|
-      app.deprecators[:active_agent] = ActiveAgent.deprecator
-    end
+    # initializer "active_agent.deprecator", before: :load_environment_config do |app|
+    #   app.deprecators[:active_agent] = ActiveAgent.deprecator
+    # end
 
     initializer "active_agent.logger" do
       ActiveSupport.on_load(:active_agent) { self.logger ||= Rails.logger }

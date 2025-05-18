@@ -19,7 +19,8 @@ module ActiveAgent
       private
 
       def handle_response(response)
-        @response = ActiveAgent::GenerationProvider::Response.new(message:, raw_response: response)
+        # TODO: check around the codebase if message should be nil
+        @response = ActiveAgent::GenerationProvider::Response.new(message: nil, raw_response: response)
         raise NotImplementedError, "Subclasses must implement the 'handle_response' method"
       end
 

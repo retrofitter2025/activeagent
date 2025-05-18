@@ -53,8 +53,8 @@ module ActiveAgent
       end
     end
 
-    def wrap_generation_behavior!(*) # :nodoc:
-      self.class.wrap_generation_behavior(prompt, *)
+    def wrap_generation_behavior!(params) # :nodoc:
+      self.class.wrap_generation_behavior(prompt, params)
     end
   end
 end

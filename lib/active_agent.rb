@@ -49,7 +49,7 @@ module ActiveAgent
 
     def load_configuration(file)
       if File.exist?(file)
-        config_file = YAML.load(ERB.new(File.read(file)).result, aliases: true)
+        config_file = YAML.load(ERB.new(File.read(file)).result) #, aliases: true)
         env = ENV["RAILS_ENV"] || ENV["ENV"] || "development"
         @config = config_file[env] || config_file
       end
@@ -61,6 +61,6 @@ autoload :Mime, "action_dispatch/http/mime_type"
 
 ActiveSupport.on_load(:action_view) do
   ActionView::Base.default_formats ||= Mime::SET.symbols
-  ActionView::Template.mime_types_implementation = Mime
+  # ActionView::Template.mime_types_implementation = Mime
   ActionView::LookupContext::DetailsKey.clear
 end

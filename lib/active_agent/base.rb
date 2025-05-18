@@ -183,16 +183,16 @@ module ActiveAgent
         payload[:perform_generations] = prompt.perform_generations
       end
 
-      def method_missing(method_name, ...)
-        if action_methods.include?(method_name.name)
-          Generation.new(self, method_name, ...)
+      def method_missing(method_name, *args)
+        if action_methods.include?(method_name)
+          Generation.new(self, method_name, *args)
         else
           super
         end
       end
 
       def respond_to_missing?(method, include_all = false)
-        action_methods.include?(method.name) || super
+        action_methods.include?(method) || super
       end
     end
 
@@ -276,7 +276,7 @@ module ActiveAgent
         @_prompt_context = ActiveAgent::ActionPrompt::Prompt.new unless @_prompt_was_called
       end
     end
-    ruby2_keywords(:process)
+    # ruby2_keywords(:process)
 
     class NullPrompt # :nodoc:
       def message
@@ -291,7 +291,7 @@ module ActiveAgent
         true
       end
 
-      def method_missing(...)
+      def method_missing(*args)
         nil
       end
     end
@@ -309,8 +309,8 @@ module ActiveAgent
       end
     end
 
-    def prompt_with(*)
-      prompt_context.update_prompt_context(*)
+    def prompt_with(params)
+      prompt_context.update_prompt_context(params)
     end
 
     def prompt(headers = {}, &block)
@@ -386,9 +386,9 @@ module ActiveAgent
       assignable.each { |k, v| prompt_context[k] = v }
     end
 
-    def collect_responses(headers, &)
+    def collect_responses(headers, &block)
       if block_given?
-        collect_responses_from_block(headers, &)
+        collect_responses_from_block(headers, &block)
       elsif headers[:body]
         collect_responses_from_text(headers)
       else
@@ -425,12 +425,12 @@ module ActiveAgent
       end.compact
     end
 
-    def each_template(paths, name, &)
+    def each_template(paths, name, &block)
       templates = lookup_context.find_all(name, paths)
       if templates.empty?
         raise ActionView::MissingTemplate.new(paths, name, paths, false, "agent")
       else
-        templates.uniq(&:format).each(&)
+        templates.uniq(&:format).each(&block)
       end
     end
 
